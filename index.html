@@ -189,11 +189,19 @@
   /* ---- grammar ---- */
   .grammar {
     background: var(--paper); border: 1px solid var(--rule); padding: 18px 22px;
-    font-family: var(--mono); font-size: 14px; line-height: 1.9; color: var(--ink);
-    overflow-x: auto; max-width: none;
+    font-family: var(--mono); font-size: 14px; line-height: 1.7; color: var(--ink);
+    display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 10px 32px; align-items: baseline;
+    max-width: none;
   }
   .grammar .op { color: var(--sat-ink); font-weight: 500; }
-  .grammar .c { color: var(--muted); }
+  .grammar .g-f { white-space: nowrap; }
+  .grammar .g-c { color: var(--muted); font-size: 13px; }
+  .grammar .g-c::before { content: "// "; }
+  @media (max-width: 760px) {
+    .grammar { grid-template-columns: 1fr; gap: 2px; }
+    .grammar .g-f { overflow-x: auto; }
+    .grammar .g-c { margin-bottom: 10px; }
+  }
 
   /* ---- formula inspector ---- */
   .inspector { border: 1px solid var(--rule-strong); background: var(--paper); box-shadow: var(--shadow); max-width: none; }
@@ -405,10 +413,18 @@
         <h2>The requirement is a formula, and the formula is a graph.</h2>
         <p>An STL formula is built from predicates over the state, Boolean connectives, and bounded temporal operators. Logic-VLA does not read the formula as text. It parses it into its syntax graph, encodes the graph with a graph convolutional network in the style of TeLoGraF, and pre-trains that encoder to predict robust semantics before the policy ever sees it. Select a formula to see the structure the policy actually conditions on.</p>
 
-        <pre class="grammar wide">φ  :=  True  |  π<sub>μ</sub>  |  <span class="op">¬</span>φ  |  φ<sub>1</sub> <span class="op">∧</span> φ<sub>2</sub>  |  φ<sub>1</sub> <span class="op">U</span><sub>[a,b]</sub> φ<sub>2</sub>          <span class="c">// core grammar</span>
-π<sub>μ</sub>(s<sub>t</sub>) :=  μ(s<sub>t</sub>) ≥ 0                                    <span class="c">// predicate, e.g. μ(s) = ‖s − O‖ − d<sub>min</sub></span>
-<span class="op">F</span><sub>[a,b]</sub> φ :=  True <span class="op">U</span><sub>[a,b]</sub> φ        <span class="op">G</span><sub>[a,b]</sub> φ :=  <span class="op">¬F</span><sub>[a,b]</sub> <span class="op">¬</span>φ         <span class="c">// eventually, globally</span>
-s ⊨ φ   ⇔   ρ<sub>φ</sub>(s) ≥ 0                                        <span class="c">// robust semantics decides satisfaction</span></pre>
+        <div class="grammar wide" role="figure" aria-label="STL grammar and semantics">
+          <span class="g-f">φ &nbsp;:= &nbsp;True &nbsp;| &nbsp;π<sub>μ</sub> &nbsp;| &nbsp;<span class="op">¬</span>φ &nbsp;| &nbsp;φ<sub>1</sub> <span class="op">∧</span> φ<sub>2</sub> &nbsp;| &nbsp;φ<sub>1</sub> <span class="op">U</span><sub>[a,b]</sub> φ<sub>2</sub></span>
+          <span class="g-c">core grammar</span>
+          <span class="g-f">π<sub>μ</sub>(s<sub>t</sub>) &nbsp;:= &nbsp;μ(s<sub>t</sub>) ≥ 0</span>
+          <span class="g-c">predicate, e.g. μ(s) = ‖s − O‖ − d<sub>min</sub> for obstacle clearance</span>
+          <span class="g-f"><span class="op">F</span><sub>[a,b]</sub> φ &nbsp;:= &nbsp;True <span class="op">U</span><sub>[a,b]</sub> φ</span>
+          <span class="g-c">eventually: φ holds at some time in [a, b]</span>
+          <span class="g-f"><span class="op">G</span><sub>[a,b]</sub> φ &nbsp;:= &nbsp;<span class="op">¬F</span><sub>[a,b]</sub> <span class="op">¬</span>φ</span>
+          <span class="g-c">globally: φ holds at every time in [a, b]</span>
+          <span class="g-f">s ⊨ φ &nbsp;⇔ &nbsp;ρ<sub>φ</sub>(s) ≥ 0</span>
+          <span class="g-c">robust semantics decides satisfaction</span>
+        </div>
 
         <div class="inspector wide" id="inspector">
           <div class="tabs" role="tablist" aria-label="Example formulas"></div>
