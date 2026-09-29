@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Logic-VLA: a temporal logic conditioned vision-language-action model. Project page with video, method, and results.">
+<title>Logic-VLA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F5F7F5;
+    --paper: #FFFFFF;
+    --ink: #121A1B;
+    --ink-2: #3E4B4B;
+    --muted: #6B7877;
+    --rule: #D6DDDA;
+    --rule-strong: #A9B5B1;
+    --sat: #177B70;
+    --sat-ink: #10635A;
+    --sat-tint: #E3F1EE;
+    --viol: #B4394A;
+    --viol-tint: #F7E6E8;
+    --neutral-bar: #7B8886;
+    --grid: rgba(18, 26, 27, 0.055);
+    --shadow: 0 1px 0 rgba(18,26,27,0.06), 0 12px 32px -20px rgba(18,26,27,0.35);
+    --serif: "STIX Two Text", "Times New Roman", Times, Georgia, serif;
+    --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1414;
+      --paper: #141B1B;
+      --ink: #E7ECEA;
+      --ink-2: #C3CDCA;
+      --muted: #8E9C99;
+      --rule: #263130;
+      --rule-strong: #3B4846;
+      --sat: #4CC2B2;
+      --sat-ink: #7ED8CB;
+      --sat-tint: #14312E;
+      --viol: #E3778A;
+      --viol-tint: #3A1B21;
+      --neutral-bar: #8A9896;
+      --grid: rgba(231, 236, 234, 0.05);
+      --shadow: 0 1px 0 rgba(0,0,0,0.4), 0 12px 32px -20px rgba(0,0,0,0.8);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1414;
+    --paper: #141B1B;
+    --ink: #E7ECEA;
+    --ink-2: #C3CDCA;
+    --muted: #8E9C99;
+    --rule: #263130;
+    --rule-strong: #3B4846;
+    --sat: #4CC2B2;
+    --sat-ink: #7ED8CB;
+    --sat-tint: #14312E;
+    --viol: #E3778A;
+    --viol-tint: #3A1B21;
+    --neutral-bar: #8A9896;
+    --grid: rgba(231, 236, 234, 0.05);
+    --shadow: 0 1px 0 rgba(0,0,0,0.4), 0 12px 32px -20px rgba(0,0,0,0.8);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: clamp(16px, 4vw, 48px);
+    padding-block: 0 96px;
+  }
+  a { color: inherit; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--sat); }
+  :focus-visible { outline: 2px solid var(--sat); outline-offset: 3px; border-radius: 2px; }
+  img, video { max-width: 100%; display: block; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.15; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  code, .mono { font-family: var(--mono); font-size: 0.92em; }
+  .math { font-family: var(--serif); font-style: italic; }
+  .math .rm { font-style: normal; }
+  sub, sup { font-size: 0.72em; line-height: 0; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ---- frame ---- */
+  .page { max-width: 1120px; margin: 0 auto; }
+
+  .top {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    padding-block: 20px 16px;
+    border-bottom: 1px solid var(--rule);
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .wordmark { font-family: var(--serif); font-weight: 600; font-size: 20px; letter-spacing: 0.01em; text-decoration: none; }
+  .wordmark small { font-family: var(--mono); font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .top nav { display: flex; gap: 22px; flex-wrap: wrap; font-size: 14px; }
+  .top nav a { text-decoration: none; color: var(--ink-2); }
+  .top nav a:hover { color: var(--ink); }
+
+  /* ---- section grid: rail + content ---- */
+  .sec {
+    display: grid; grid-template-columns: 1fr; gap: 12px 40px;
+    padding-block: 64px 0;
+  }
+  .rail { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; gap: 14px; align-items: baseline; }
+  .rail .num { color: var(--sat-ink); font-weight: 500; }
+  .body { min-width: 0; }
+  .body > * + * { margin-top: 20px; }
+  .body h2 { font-size: clamp(26px, 3vw, 34px); }
+  .body p, .body li { max-width: 66ch; color: var(--ink-2); }
+  .body .lede { font-size: 18px; color: var(--ink); }
+  .wide { max-width: none !important; }
+  @media (min-width: 1000px) {
+    .sec { grid-template-columns: 180px minmax(0, 1fr); }
+    .rail { flex-direction: column; gap: 4px; position: sticky; top: 92px; align-self: start; padding-top: 8px; border-top: 1px solid var(--rule-strong); }
+  }
+
+  /* ---- hero ---- */
+  .hero { padding-block: 56px 32px; display: grid; grid-template-columns: 1fr; gap: 28px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; }
+  .eyebrow .dot { color: var(--sat); }
+  .hero h1 { font-size: clamp(48px, 8vw, 96px); font-weight: 500; letter-spacing: -0.02em; line-height: 0.98; }
+  .hero h1 .hy { color: var(--sat); }
+  .hero .sub { font-family: var(--serif); font-size: clamp(20px, 2.4vw, 28px); font-weight: 400; font-style: italic; color: var(--ink-2); max-width: 30ch; line-height: 1.3; text-wrap: balance; }
+  .authors { font-size: 14px; color: var(--muted); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+    border: 1px solid var(--rule-strong); border-radius: 3px; text-decoration: none;
+    font-size: 14px; font-weight: 500; color: var(--ink); background: var(--paper);
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .btn:hover { border-color: var(--sat); }
+  .btn.primary { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+  .btn.primary:hover { border-color: var(--sat); background: var(--sat-ink); }
+  .btn[aria-disabled="true"] { color: var(--muted); border-style: dashed; pointer-events: none; }
+  .btn .k { font-family: var(--mono); font-size: 11px; color: currentColor; opacity: .7; }
+
+  .hero-side { border-top: 1px solid var(--rule-strong); padding-top: 18px; }
+  .spec-line { font-family: var(--mono); font-size: 13px; color: var(--ink-2); line-height: 1.8; }
+  .spec-line b { color: var(--sat-ink); font-weight: 500; }
+  .spec-line .lbl { color: var(--muted); }
+  @media (min-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr); align-items: end; }
+    .hero-side { border-top: 0; border-left: 1px solid var(--rule-strong); padding: 6px 0 6px 28px; }
+  }
+
+  /* ---- video ---- */
+  .video-wrap { margin-top: 28px; }
+  .video-frame { position: relative; background: #000; border: 1px solid var(--rule-strong); box-shadow: var(--shadow); aspect-ratio: 16 / 9; max-width: 100%; }
+  .video-frame video { width: 100%; height: 100%; }
+  .video-cap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 10px; letter-spacing: 0.02em; }
+
+  /* ---- statement block ---- */
+  .statement {
+    border-left: 3px solid var(--sat); background: var(--paper);
+    padding: 20px 24px; box-shadow: var(--shadow);
+    font-family: var(--serif); font-size: 17px; line-height: 1.55; color: var(--ink);
+    max-width: none;
+  }
+  .statement .tag { font-family: var(--mono); font-style: normal; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sat-ink); display: block; margin-bottom: 8px; }
+  .statement p { max-width: none; color: var(--ink); }
+
+  .figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-top: 28px; }
+  .fig { background: var(--paper); padding: 20px 20px 18px; display: grid; gap: 6px; align-content: start; }
+  .fig .v { font-family: var(--serif); font-size: clamp(30px, 3.4vw, 44px); line-height: 1; color: var(--ink); letter-spacing: -0.01em; }
+  .fig .v.sat { color: var(--sat-ink); }
+  .fig .u { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .fig .d { font-size: 14px; color: var(--ink-2); line-height: 1.45; }
+  @media (max-width: 720px) { .figures { grid-template-columns: 1fr; } }
+
+  /* ---- grammar ---- */
+  .grammar {
+    background: var(--paper); border: 1px solid var(--rule); padding: 18px 22px;
+    font-family: var(--mono); font-size: 14px; line-height: 1.9; color: var(--ink);
+    overflow-x: auto; max-width: none;
+  }
+  .grammar .op { color: var(--sat-ink); font-weight: 500; }
+  .grammar .c { color: var(--muted); }
+
+  /* ---- formula inspector ---- */
+  .inspector { border: 1px solid var(--rule-strong); background: var(--paper); box-shadow: var(--shadow); max-width: none; }
+  .tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--rule); }
+  .tab {
+    appearance: none; border: 0; background: transparent; cursor: pointer; text-align: left;
+    padding: 12px 16px; font-family: var(--mono); font-size: 13px; color: var(--ink-2);
+    border-right: 1px solid var(--rule); border-bottom: 2px solid transparent; margin-bottom: -1px;
+    flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tab:hover { color: var(--ink); background: var(--ground); }
+  .tab[aria-selected="true"] { color: var(--sat-ink); border-bottom-color: var(--sat); font-weight: 500; }
+  .panel { display: grid; grid-template-columns: 1fr; }
+  .graph { padding: 20px; border-bottom: 1px solid var(--rule); min-height: 260px; }
+  .graph svg { width: 100%; height: 340px; display: block; overflow: visible; }
+  .graph .glab { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .graph .lab { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; fill: var(--muted); }
+  .reading { padding: 20px 22px; display: grid; gap: 14px; align-content: start; }
+  .reading .f { font-family: var(--mono); font-size: 15px; color: var(--ink); line-height: 1.5; word-break: break-word; }
+  .reading .en { font-family: var(--serif); font-size: 17px; line-height: 1.5; color: var(--ink); }
+  .reading .src { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+  .reading dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 13.5px; color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: 12px; }
+  .reading dt { font-family: var(--mono); color: var(--sat-ink); white-space: nowrap; }
+  .reading dd { margin: 0; }
+  @media (min-width: 820px) {
+    .panel { grid-template-columns: minmax(0, 1.15fr) minmax(280px, 1fr); }
+    .graph { border-bottom: 0; border-right: 1px solid var(--rule); }
+  }
+  .node-t { fill: var(--sat-tint); stroke: var(--sat); }
+  .node-b { fill: var(--paper); stroke: var(--rule-strong); }
+  .node-p { fill: var(--ground); stroke: var(--rule-strong); }
+  .node-txt { font-family: var(--mono); font-size: 13px; fill: var(--ink); }
+  .node-int { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+  .edge { stroke: var(--rule-strong); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+  .arrowhead { fill: var(--rule-strong); }
+  @media (prefers-reduced-motion: no-preference) {
+    .edge.draw { stroke-dasharray: 200; stroke-dashoffset: 200; animation: draw .6s ease forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+  }
+
+  /* ---- method ---- */
+  figure { margin: 0; }
+  .figure-frame { background: var(--paper); border: 1px solid var(--rule); padding: 14px; box-shadow: var(--shadow); }
+  .figure-frame img { margin: 0 auto; width: auto; height: auto; max-width: 100%; }
+  figure.fig-1 { max-width: 720px; }
+  figure.fig-2 { max-width: 560px; }
+  .robot figure img { max-height: 340px; }
+  figcaption { font-size: 13.5px; color: var(--muted); line-height: 1.5; padding-top: 10px; max-width: 70ch; }
+  figcaption b { color: var(--ink-2); font-weight: 500; }
+
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--rule-strong); max-width: none; }
+  .step { display: grid; grid-template-columns: 72px 1fr; gap: 0 20px; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+  .step .n { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--sat-ink); padding-top: 4px; }
+  .step h3 { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+  .step p { font-size: 15px; }
+  .step .eq { font-family: var(--serif); font-size: 17px; color: var(--ink); margin-top: 12px; padding: 12px 16px; background: var(--ground); border-left: 2px solid var(--rule-strong); overflow-x: auto; max-width: none; }
+  .step .eq .why { display: block; font-family: var(--sans); font-style: normal; font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+  /* ---- results ---- */
+  .facets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: none; }
+  @media (max-width: 820px) { .facets { grid-template-columns: 1fr; } }
+  .facet { background: var(--paper); border: 1px solid var(--rule); padding: 14px 14px 10px; }
+  .facet h3 { font-family: var(--mono); font-weight: 500; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
+  .facet .n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .facet svg { width: 100%; height: auto; display: block; }
+  .facet .ax { font-family: var(--mono); font-size: 10px; fill: var(--muted); }
+  .facet .rowlab { font-family: var(--sans); font-size: 11.5px; fill: var(--ink-2); }
+  .facet .rowlab.hl { fill: var(--ink); font-weight: 600; }
+  .facet .val { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-2); }
+  .facet .gridl { stroke: var(--rule); stroke-width: 1; }
+  .facet .base { stroke: var(--rule-strong); stroke-width: 1; }
+  .facet .bar-s { fill: var(--sat); }
+  .facet .bar-t { fill: var(--neutral-bar); }
+  .facet .hit { fill: transparent; }
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); font-family: var(--mono); }
+  .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 8px; vertical-align: -2px; }
+  .legend .l-s::before { background: var(--sat); }
+  .legend .l-t::before { background: var(--neutral-bar); }
+  .tip { position: fixed; pointer-events: none; z-index: 20; background: var(--ink); color: var(--ground); font-family: var(--mono); font-size: 12px; padding: 6px 9px; border-radius: 3px; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); opacity: 0; transition: opacity .1s; }
+  .tip.on { opacity: 1; }
+
+  .tablewrap { overflow-x: auto; max-width: none; border: 1px solid var(--rule); background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  th.grp { text-align: center; border-bottom: 1px solid var(--rule-strong); color: var(--ink-2); }
+  td:first-child, th:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.ours td { background: var(--sat-tint); color: var(--ink); font-weight: 500; }
+  tr.ours td:first-child { color: var(--sat-ink); }
+  td.b { font-weight: 600; }
+  .tnote { font-size: 13px; color: var(--muted); max-width: 80ch; }
+
+  .abl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: none; }
+  @media (max-width: 720px) { .abl { grid-template-columns: 1fr; } }
+  .abl .tablewrap h3 { font-family: var(--mono); font-weight: 500; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); padding: 12px 12px 0; }
+  .abl .tablewrap p { font-size: 13px; color: var(--muted); padding: 2px 12px 8px; max-width: none; }
+
+  /* ---- robot ---- */
+  .robot { display: grid; grid-template-columns: 1fr; gap: 24px; max-width: none; }
+  @media (min-width: 900px) { .robot { grid-template-columns: minmax(220px, 0.55fr) minmax(0, 1.45fr); align-items: start; } }
+  .trials { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule-strong); }
+  .trial { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+  .trial .id { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .trial .stl { font-family: var(--mono); font-size: 13px; color: var(--ink); overflow-wrap: anywhere; }
+  .trial .cells { display: grid; grid-template-columns: repeat(15, 9px); gap: 2px; }
+  .trial .cells i { display: block; width: 9px; height: 14px; background: var(--sat); border-radius: 1px; }
+  .trial .cells i.x { background: var(--viol); }
+  .trial .cnt { font-family: var(--mono); font-size: 12px; color: var(--ink-2); min-width: 5ch; text-align: right; }
+  .trial .r { display: flex; align-items: center; gap: 12px; }
+  .predbox { font-size: 13px; color: var(--muted); }
+  .predbox dl { margin: 10px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-family: var(--mono); font-size: 12px; }
+  .predbox dt { color: var(--ink-2); } .predbox dd { margin: 0; color: var(--muted); }
+  .key { display: flex; gap: 18px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .key i { display: inline-block; width: 9px; height: 12px; vertical-align: -2px; margin-right: 6px; background: var(--sat); }
+  .key i.x { background: var(--viol); }
+
+  /* ---- cite ---- */
+  pre.bib { margin: 0; background: var(--paper); border: 1px solid var(--rule); padding: 18px 20px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: var(--ink-2); overflow-x: auto; max-width: none; }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <a class="wordmark" href="#top">Logic-VLA</a>
+    <nav aria-label="Sections">
+      <a href="#claim">Claim</a>
+      <a href="#stl">Specification</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#robot">Robot</a>
+      <a href="#cite">Cite</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div>
+        <p class="eyebrow"><span>Requirement-aware post-training</span><span class="dot">●</span><span>Signal Temporal Logic</span></p>
+        <h1 style="margin-top:18px">Logic<span class="hy">-</span>VLA</h1>
+        <p class="sub" style="margin-top:14px">A temporal logic conditioned vision-language-action model.</p>
+        <div class="actions" style="margin-top:22px">
+          <a class="btn primary" href="assets/logic-vla-paper.pdf">Paper <span class="k">PDF</span></a>
+          <a class="btn" href="#video">Video <span class="k">3:00</span></a>
+          <a class="btn" href="#" aria-disabled="true">Code <span class="k">soon</span></a>
+        </div>
+      </div>
+      <div class="hero-side">
+        <p class="spec-line">
+          <span class="lbl">policy</span>&nbsp;&nbsp;π<sub>θ̃</sub>( a | o, ℓ, <b>φ</b> )<br>
+          <span class="lbl">input</span>&nbsp;&nbsp;&nbsp;o&nbsp;: camera observation<br>
+          <span class="lbl">input</span>&nbsp;&nbsp;&nbsp;ℓ&nbsp;: natural-language task<br>
+          <span class="lbl">input</span>&nbsp;&nbsp;&nbsp;<b>φ</b>&nbsp;: STL requirement, supplied at inference<br>
+          <span class="lbl">goal</span>&nbsp;&nbsp;&nbsp;&nbsp;s ⊨ <b>φ</b>&nbsp;&nbsp;∧&nbsp;&nbsp;s completes ℓ
+        </p>
+        <p style="font-size:14px;color:var(--ink-2);margin-top:14px;max-width:38ch">One policy. The formal requirement is an input, not a training target, so it can change from one deployment to the next without retraining.</p>
+      </div>
+    </section>
+
+    <div class="video-wrap" id="video">
+      <div class="video-frame">
+        <video controls preload="metadata" playsinline poster="assets/poster.jpg">
+          <source src="assets/logic-vla-video.mp4" type="video/mp4">
+          Your browser does not support embedded video. <a href="assets/logic-vla-video.mp4">Download the video.</a>
+        </video>
+      </div>
+      <p class="video-cap"><span>Supplementary video · 1280 × 720 · 2 min 59 s</span><span>Quadcopter simulation in Isaac Sim 5.1 and Toyota HSR deployment</span></p>
+    </div>
+
+    <!-- ============ CLAIM ============ -->
+    <section class="sec" id="claim">
+      <div class="rail"><span class="num">§ 1</span><span>Problem</span></div>
+      <div class="body">
+        <h2>Language says what. Logic says exactly how.</h2>
+        <p class="lede">A vision-language-action model will happily fly a drone to the cardboard boxes. It will not, on its own, promise to stay three meters from the forklift for the first eight seconds, or to arrive within a deadline. Those are trajectory-level requirements, and natural language is a poor instrument for stating them precisely or checking whether they were met.</p>
+        <p>Signal Temporal Logic (STL) is the standard formal language for exactly this class of requirement, with a robust semantics <span class="math">ρ<sub>φ</sub>(s)</span> that scores how strongly a trajectory satisfies or violates a formula. Logic-VLA makes the STL formula a first-class input to a pre-trained flow-matching policy, so that the same network changes its behavior when the requirement changes.</p>
+
+        <div class="statement">
+          <span class="tag">Problem 3.1</span>
+          <p>Consider a well-trained VLA <span class="math">π<sub>θ</sub></span> with task distribution <span class="math">L</span> and environment distribution <span class="math">E</span>. Design a post-training procedure <span class="math">θ̃ = A(θ)</span> such that, at inference time, <span class="math">π<sub>θ̃</sub>(· | o, ℓ, φ)</span> jointly conditions on the observation <span class="math">o</span>, the natural-language task <span class="math">ℓ ∼ L</span>, and the STL requirement <span class="math">φ</span>, and produces a trajectory <span class="math">s</span> satisfying both <span class="math">s ⊨ φ</span> and <span class="math">ℓ</span>.</p>
+        </div>
+
+        <div class="figures wide">
+          <div class="fig">
+            <span class="u">STL satisfaction vs. STL-blind base</span>
+            <span class="v sat tnum">+24.8 to +40.7 pp</span>
+            <span class="d">Across seen formulas, unseen parameters, and unseen formula structures in simulation.</span>
+          </div>
+          <div class="fig">
+            <span class="u">Cost to the language task</span>
+            <span class="v tnum">≤ 1.8 pp</span>
+            <span class="d">Largest drop in natural-language task success in any split. Direct robustness maximization loses up to 48 pp.</span>
+          </div>
+          <div class="fig">
+            <span class="u">Physical robot</span>
+            <span class="v tnum">161 / 165</span>
+            <span class="d">Retained trials satisfying the specified formula on a Toyota HSR. Every violation was a timing miss on a 22 s deadline.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STL ============ -->
+    <section class="sec" id="stl">
+      <div class="rail"><span class="num">§ 2</span><span>Specification</span></div>
+      <div class="body">
+        <h2>The requirement is a formula, and the formula is a graph.</h2>
+        <p>An STL formula is built from predicates over the state, Boolean connectives, and bounded temporal operators. Logic-VLA does not read the formula as text. It parses it into its syntax graph, encodes the graph with a graph convolutional network in the style of TeLoGraF, and pre-trains that encoder to predict robust semantics before the policy ever sees it. Select a formula to see the structure the policy actually conditions on.</p>
+
+        <pre class="grammar wide">φ  :=  True  |  π<sub>μ</sub>  |  <span class="op">¬</span>φ  |  φ<sub>1</sub> <span class="op">∧</span> φ<sub>2</sub>  |  φ<sub>1</sub> <span class="op">U</span><sub>[a,b]</sub> φ<sub>2</sub>          <span class="c">// core grammar</span>
+π<sub>μ</sub>(s<sub>t</sub>) :=  μ(s<sub>t</sub>) ≥ 0                                    <span class="c">// predicate, e.g. μ(s) = ‖s − O‖ − d<sub>min</sub></span>
+<span class="op">F</span><sub>[a,b]</sub> φ :=  True <span class="op">U</span><sub>[a,b]</sub> φ        <span class="op">G</span><sub>[a,b]</sub> φ :=  <span class="op">¬F</span><sub>[a,b]</sub> <span class="op">¬</span>φ         <span class="c">// eventually, globally</span>
+s ⊨ φ   ⇔   ρ<sub>φ</sub>(s) ≥ 0                                        <span class="c">// robust semantics decides satisfaction</span></pre>
+
+        <div class="inspector wide" id="inspector">
+          <div class="tabs" role="tablist" aria-label="Example formulas"></div>
+          <div class="panel">
+            <div class="graph" role="tabpanel"></div>
+            <div class="reading"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METHOD ============ -->
+    <section class="sec" id="method">
+      <div class="rail"><span class="num">§ 3</span><span>Method</span></div>
+      <div class="body">
+        <h2>Pre-train the encoder. Then imitate. Then prefer.</h2>
+        <p>Logic-VLA is built on π<sub>0.5</sub>. The STL encoder emits <span class="math">N<sub>spec</sub></span> specification tokens that are appended to the vision-language prefix after the image and text tokens, where bidirectional attention fuses them with the scene. The backbone is unchanged and initialized from the pre-trained weights. The recipe applies to any flow-matching VLA.</p>
+
+        <figure class="fig-1">
+          <div class="figure-frame"><img src="assets/fig1-overview.jpg" alt="Overview diagram. Left: logic encoder pre-training from trajectories and syntax graphs to predicted robust semantics. Right: post-training, where camera observations, a language instruction, and the encoded logic formula condition a pre-trained VLA whose action expert outputs continuous actions." width="1541" height="582" loading="lazy"></div>
+          <figcaption><b>Figure 1.</b> The logic encoder is pre-trained from trajectory–formula pairs (left). During post-training (right) the encoded formula enters the VLA prefix alongside camera observations and the language instruction. Reproduced from the paper.</figcaption>
+        </figure>
+
+        <ol class="steps wide">
+          <li class="step">
+            <span class="n">Step 0</span>
+            <div>
+              <h3>Give the encoder semantics before it meets the policy</h3>
+              <p>For trajectory–formula pairs <span class="math">(p<sup>(i)</sup>, φ<sup>(j)</sup>)</span>, a monitor computes the true robust semantics. The graph encoder and an auxiliary trajectory encoder are trained to predict it. The trajectory encoder is then discarded. Only the symbolic requirement is encoded; the scene is grounded through the cameras, so the logic representation is independent of any particular environment.</p>
+              <div class="eq math">L<sub>pre</sub> = 𝔼 [ H<sub>δ</sub>( r̂<sup>(i,j)</sup> − tanh( ρ<sup>(i,j)</sup> / c ) ) ]
+                <span class="why">Huber loss on the normalized robustness. This one choice lifts seen-formula satisfaction from 46.7% to 61.7% under otherwise identical supervised fine-tuning.</span></div>
+            </div>
+          </li>
+          <li class="step">
+            <span class="n">Stage 1</span>
+            <div>
+              <h3>STL-conditioned supervised fine-tuning</h3>
+              <p>From an in-domain rollout dataset and a bank of sampled formulas, the monitor picks executions that clearly satisfy each formula. The policy imitates those action chunks under the context <span class="math">ξ = (o, ℓ, φ)</span> with the standard conditional flow-matching objective and no STL-specific loss. The encoder and policy are fine-tuned jointly; a frozen copy of the result becomes the reference policy for Stage 2.</p>
+            </div>
+          </li>
+          <li class="step">
+            <span class="n">Stage 2</span>
+            <div>
+              <h3>Trajectory-level preference optimization</h3>
+              <p>Satisfying and violating rollouts of the same task, formula, and comparable initial conditions are paired. Because satisfaction is a property of whole trajectories, flow-matching losses are averaged over sampled temporal windows and their differences to the reference act as a likelihood-ratio surrogate for Identity Preference Optimization. A one-sided anchor stops the policy from winning the margin by getting worse at the satisfying rollout.</p>
+              <div class="eq math">q<sup>±</sup><sub>i</sub> = ℓ̄<sup>±</sup><sub>θ<sub>SFT</sub>,i</sub> − ℓ̄<sup>±</sup><sub>θ̃,i</sub> ,&nbsp;&nbsp; Δ<sub>i</sub> = β ( q<sup>+</sup><sub>i</sub> − q<sup>−</sup><sub>i</sub> ) ,&nbsp;&nbsp; A<sub>i</sub> = [ ℓ̄<sup>+</sup><sub>θ̃,i</sub> − sg( ℓ̄<sup>+</sup><sub>θ<sub>ref</sub>,i</sub> ) ]<sub>+</sub><br>
+                L<sub>pref</sub> = 𝔼<sub>i</sub> [ ℓ<sub>IPO,i</sub> + λ A<sub>i</sub> ]
+                <span class="why">The preference term learns which of two comparable executions the formula favors. The anchor is active only when the current policy fits the satisfying rollout worse than the Stage-1 reference.</span></div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section class="sec" id="results">
+      <div class="rail"><span class="num">§ 4</span><span>Results</span></div>
+      <div class="body">
+        <h2>Higher satisfaction without paying for it in task success.</h2>
+        <p>Closed-loop quadcopter navigation in ten randomized photorealistic warehouses with six language tasks. Formulas are drawn from 90 structural templates over <span class="math">F, G, FG, GF, FGF, GFG</span> with ∧ and ∨, predicates on drone position, and integer time bounds up to 16 s. Every method starts from the same STL-blind policy. Each evaluation entry is run from 10 sampled initial states.</p>
+
+        <figure class="fig-2">
+          <div class="figure-frame"><img src="assets/fig2-sim-tasks.jpg" alt="Warehouse simulation scene with six colored example drone trajectories, each ending at a numbered target: packing table, wet floor sign, G1 humanoid, forklift, orange barrel past a corridor, and cardboard boxes." width="737" height="406" loading="lazy"></div>
+          <figcaption><b>Figure 2.</b> One example trajectory per task: (1) packing table, (2) wet floor sign, (3) G1 humanoid, (4) forklift, (5) through the corridor to the orange barrel, (6) cardboard boxes.</figcaption>
+        </figure>
+
+        <div class="legend wide"><span class="l-s">STL satisfaction rate (%)</span><span class="l-t">Natural-language task success (%)</span></div>
+        <div class="facets" id="facets"></div>
+        <p class="tnote">Hover a bar for its value. Smooth robust semantics maximization buys satisfaction by abandoning the language task; Logic-VLA buys it from the ordering information in satisfying–violating pairs, which positive-only imitation never sees.</p>
+
+        <div class="tablewrap wide">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th class="grp" colspan="4">Seen (60 entries)</th>
+                <th class="grp" colspan="4">Unseen parameter (99)</th>
+                <th class="grp" colspan="4">Unseen structure (56)</th>
+              </tr>
+              <tr>
+                <th>Method</th>
+                <th>Sat. ↑</th><th>ρ mean</th><th>ρ min ↑</th><th>Task ↑</th>
+                <th>Sat. ↑</th><th>ρ mean</th><th>ρ min ↑</th><th>Task ↑</th>
+                <th>Sat. ↑</th><th>ρ mean</th><th>ρ min ↑</th><th>Task ↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Base (STL-blind π<sub>0.5</sub>)</td><td>41.3</td><td>−0.35 ± 1.33</td><td>−9.11</td><td class="b">90.5</td><td>50.0</td><td>−0.03 ± 1.26</td><td>−5.80</td><td class="b">93.9</td><td>56.8</td><td>0.07 ± 1.51</td><td>−6.98</td><td class="b">89.3</td></tr>
+              <tr><td>STL-SFT</td><td>61.7</td><td>0.49 ± 1.57</td><td>−5.09</td><td>87.2</td><td>59.5</td><td>0.34 ± 1.52</td><td>−5.05</td><td>91.2</td><td>64.5</td><td>0.71 ± 1.86</td><td>−4.64</td><td>85.2</td></tr>
+              <tr><td>Smooth robust semantics (1×)</td><td>76.2</td><td>1.62 ± 2.92</td><td>−5.72</td><td>68.5</td><td>71.1</td><td>1.24 ± 2.51</td><td>−4.94</td><td>75.9</td><td>77.5</td><td>2.18 ± 3.26</td><td>−4.92</td><td>68.6</td></tr>
+              <tr><td>Smooth robust semantics (2×)</td><td>78.8</td><td class="b">2.33 ± 3.80</td><td>−5.79</td><td>45.0</td><td>72.1</td><td class="b">1.81 ± 3.19</td><td>−7.31</td><td>47.4</td><td>81.8</td><td class="b">3.34 ± 4.24</td><td>−3.82</td><td>42.0</td></tr>
+              <tr class="ours"><td>Logic-VLA</td><td class="b">82.0</td><td>0.81 ± 1.33</td><td class="b">−1.62</td><td>89.0</td><td class="b">74.8</td><td>0.89 ± 1.64</td><td class="b">−3.79</td><td>92.2</td><td class="b">82.0</td><td>1.24 ± 1.71</td><td class="b">−2.46</td><td>87.5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tnote"><b>Table I.</b> ρ min is the worst robustness over all rollouts in the split; Logic-VLA has the least severe worst case in every split. Unseen parameter covers all 87 training structures with held-out predicate and time parameters. Unseen structure covers 3 templates held out from both post-training and encoder pre-training.</p>
+
+        <div class="abl">
+          <div class="tablewrap">
+            <h3>Ablation A · encoder pre-training</h3>
+            <p>STL-SFT only. STL satisfaction / task success (%).</p>
+            <table>
+              <thead><tr><th>Split</th><th>Random init</th><th>Pre-trained</th></tr></thead>
+              <tbody>
+                <tr><td>Seen</td><td>46.7 / 84.5</td><td class="b">61.7 / 87.2</td></tr>
+                <tr><td>Unseen parameter</td><td>52.9 / 89.5</td><td class="b">59.5 / 91.2</td></tr>
+                <tr><td>Unseen structure</td><td>56.6 / 83.9</td><td class="b">64.5 / 85.2</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tablewrap">
+            <h3>Ablation B · graph encoder vs. text prompt</h3>
+            <p>Both with SFT + IPO. STL satisfaction / task success (%).</p>
+            <table>
+              <thead><tr><th>Split</th><th>Formula as text</th><th>Syntax-graph encoder</th></tr></thead>
+              <tbody>
+                <tr><td>Seen</td><td>66.5 / 88.5</td><td class="b">82.0 / 89.0</td></tr>
+                <tr><td>Unseen parameter</td><td>70.1 / 89.7</td><td class="b">74.8 / 92.2</td></tr>
+                <tr><td>Unseen structure</td><td>81.4 / 85.5</td><td class="b">82.0 / 87.5</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <p class="tnote"><b>Table II.</b> Training used 1,604 formula-groups from 1,360 distinct formulas, giving 8,886 satisfying demonstrations and 13,494 preference pairs. The 2B vision-language backbone and 300M action expert were adapted with LoRA (ranks 16 and 32).</p>
+      </div>
+    </section>
+
+    <!-- ============ ROBOT ============ -->
+    <section class="sec" id="robot">
+      <div class="rail"><span class="num">§ 5</span><span>Deployment</span></div>
+      <div class="body">
+        <h2>Eleven formulas, one instruction, a real robot.</h2>
+        <p>A Toyota Human Support Robot is told only "Navigate to the cabinets." The STL formula decides whether it passes the table and box on the left or right and by when it must arrive. 120 teleoperated demonstrations cover the four route families. The policy predicts 30-waypoint chunks tracked by a proportional controller at 10 Hz, with the next chunk requested 0.5 s before the current one ends. Fifteen retained trials per formula, after excluding collision-triggered emergency stops.</p>
+
+        <div class="robot">
+          <figure>
+            <div class="figure-frame"><img src="assets/fig3-routes.jpg" alt="Overhead photo of a lab with a mobile robot at the start, a table and a cardboard box as obstacles, and four drawn routes R1 through R4 passing left or right of each obstacle toward a goal line." width="585" height="677" loading="lazy"></div>
+            <figcaption><b>Figure 3.</b> Route families R1–R4 correspond to formulas 1–4 below. The cabinets are behind the goal line.</figcaption>
+            <div class="predbox" style="margin-top:16px">Named predicates hold when the measured planar position lies inside a bounding box (m):
+              <dl>
+                <dt>at table left</dt><dd>x ∈ [−2.20, −0.92], y ∈ [0.00, 0.50]</dd>
+                <dt>at table right</dt><dd>x ∈ [−0.92, 0.00], y ∈ [0.00, 0.50]</dd>
+                <dt>at box left</dt><dd>x ∈ [−2.60, −1.56], y ∈ [2.00, 2.50]</dd>
+                <dt>at box right</dt><dd>x ∈ [−1.56, −0.10], y ∈ [2.00, 2.50]</dd>
+                <dt>at cabinets</dt><dd>x ∈ [−2.20, −0.20], y ∈ [3.50, 4.30]</dd>
+              </dl>
+            </div>
+          </figure>
+          <div>
+            <div class="key" style="margin-bottom:10px"><span><i></i>trial satisfied φ</span><span><i class="x"></i>trial violated φ</span></div>
+            <ol class="trials" id="trials"></ol>
+            <p class="tnote" style="margin-top:14px"><b>Table IV.</b> 161 of 165 trials satisfied (97.6%). The eight formulas without a cabinet deadline were satisfied 120/120. The three with the 22 s deadline reached 41/45; end-to-end inference latency is the likely cause of the four timing misses.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CITE ============ -->
+    <section class="sec" id="cite">
+      <div class="rail"><span class="num">§ 6</span><span>Citation</span></div>
+      <div class="body">
+        <h2>Cite</h2>
+<pre class="bib">@article{logicvla2026,
+  title  = {Logic-VLA: A Temporal Logic Conditioned Vision-Language-Action Model},
+  year   = {2026}
+}</pre>
+        <footer>
+          <span>Logic-VLA · Built on π<sub>0.5</sub> and TeLoGraF · Evaluated in NVIDIA Isaac Sim 5.1</span>
+          <span>Code will be made publicly available.</span>
+        </footer>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  /* ---------- Formula inspector ---------- */
+  // Trees: temporal ops carry an interval; predicates are leaves.
+  var FORMULAS = [
+    {
+      short: "G[0,8] ¬((x ≥ 3) ∧ (y ≤ 0))",
+      full: "G[0,8] ¬((x ≥ 3) ∧ (y ≤ 0))",
+      en: "For the whole of the first 8 seconds, the drone is never inside the region where x ≥ 3 and y ≤ 0.",
+      src: "Simulation · task “Fly to the cardboard box cluster” · shown in the video",
+      defs: [["G[0,8]", "globally: the operand holds at every time in [0, 8] s"], ["¬", "negation"], ["∧", "conjunction: both operands hold"], ["x ≥ 3", "predicate on drone position, μ(s) = x − 3"]],
+      tree: { op: "G", int: "[0,8]", kids: [{ op: "¬", kids: [{ op: "∧", kids: [{ pred: "x ≥ 3" }, { pred: "y ≤ 0" }] }] }] }
+    },
+    {
+      short: "F[6,7] G[3,5] ((y ≥ 10) ∨ (z ≥ 2))",
+      full: "F[6,7] G[3,5] ((y ≥ 10) ∨ (z ≥ 2))",
+      en: "At some moment between 6 and 7 seconds, a window begins during which, for the next 3 to 5 seconds, the drone keeps y ≥ 10 or holds altitude z ≥ 2.",
+      src: "Simulation · nested FG structure · matched satisfying/violating pair in the video",
+      defs: [["F[6,7]", "eventually: the operand holds at some time in [6, 7] s"], ["G[3,5]", "globally, relative to that time: holds at every offset in [3, 5] s"], ["∨", "disjunction: at least one operand holds"], ["z ≥ 2", "predicate on altitude, μ(s) = z − 2"]],
+      tree: { op: "F", int: "[6,7]", kids: [{ op: "G", int: "[3,5]", kids: [{ op: "∨", kids: [{ pred: "y ≥ 10" }, { pred: "z ≥ 2" }] }] }] }
+    },
+    {
+      short: "F[3s,17s](at table left) ∧ F[0s,22s](at cabinets)",
+      full: "F[3s,17s](at table left) ∧ F[0s,22s](at cabinets)",
+      en: "Pass through the table-left region sometime between 3 and 17 seconds, and reach the cabinets within 22 seconds of the episode start.",
+      src: "Physical robot · formula 10 · satisfied in 13 of 15 trials",
+      defs: [["∧", "both timed visits are required"], ["F[3s,17s]", "eventually within the window: a timed region visit"], ["F[0s,22s]", "a deadline: arrive at the cabinets by 22 s"], ["at cabinets", "predicate: planar position inside the cabinets box"]],
+      tree: { op: "∧", kids: [{ op: "F", int: "[3,17]", kids: [{ pred: "at table left" }] }, { op: "F", int: "[0,22]", kids: [{ pred: "at cabinets" }] }] }
+    },
+    {
+      short: "G[0,15](avoid box ∧ avoid table)",
+      full: "G[0,15](avoid box ∧ avoid table)",
+      en: "For the first 15 seconds, stay clear of both the box and the table at all times.",
+      src: "Illustrative example · Figure 1 of the paper",
+      defs: [["G[0,15]", "globally over [0, 15] s"], ["∧", "both clearances hold simultaneously"], ["avoid box", "predicate, μ(s) = ‖s − O‖ − d_min for the box"]],
+      tree: { op: "G", int: "[0,15]", kids: [{ op: "∧", kids: [{ pred: "avoid box" }, { pred: "avoid table" }] }] }
+    }
+  ];
+
+  var tabs = document.querySelector("#inspector .tabs");
+  var graph = document.querySelector("#inspector .graph");
+  var reading = document.querySelector("#inspector .reading");
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  function layout(tree) {
+    // assign x by leaf order, y by depth (child-to-parent edges, so root on top)
+    var leaves = 0, depth = 0, nodes = [], edges = [];
+    function walk(n, d, parent) {
+      var node = { n: n, d: d, parent: parent };
+      nodes.push(node);
+      depth = Math.max(depth, d);
+      if (n.kids && n.kids.length) {
+        var xs = [];
+        n.kids.forEach(function (k) { var c = walk(k, d + 1, node); xs.push(c.x); edges.push([c, node]); });
+        node.x = (xs[0] + xs[xs.length - 1]) / 2;
+      } else { node.x = leaves++; }
+      return node;
+    }
+    walk(tree, 0, null);
+    return { nodes: nodes, edges: edges, leaves: leaves, depth: depth };
+  }
+
+  function renderGraph(f) {
+    var L = layout(f.tree);
+    var colW = 150, rowH = 78, padX = 60, padY = 30;
+    var W = Math.max(2, L.leaves) * colW + padX * 2 - colW;
+    var H = (L.depth + 1) * rowH + padY * 2 - rowH + 10;
+    var cx = function (x) { return padX + x * colW + (L.leaves < 2 ? colW / 2 : 0); };
+    var cy = function (d) { return padY + d * rowH; };
+    var out = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Syntax graph of ' + esc(f.full) + '">';
+    out += '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"></path></marker></defs>';
+    L.edges.forEach(function (e, i) {
+      var a = e[0], b = e[1];
+      var x1 = cx(a.x), y1 = cy(a.d) - 20, x2 = cx(b.x), y2 = cy(b.d) + 22;
+      var mid = (y1 + y2) / 2;
+      out += '<path class="edge' + (reduced ? "" : " draw") + '" style="animation-delay:' + (i * 60) + 'ms" d="M' + x1 + ',' + y1 + ' C' + x1 + ',' + mid + ' ' + x2 + ',' + mid + ' ' + x2 + ',' + y2 + '"></path>';
+    });
+    L.nodes.forEach(function (nd) {
+      var n = nd.n, x = cx(nd.x), y = cy(nd.d);
+      if (n.pred) {
+        var w = Math.max(84, n.pred.length * 8.2 + 22);
+        out += '<g><rect class="node-p" x="' + (x - w / 2) + '" y="' + (y - 18) + '" width="' + w + '" height="36" rx="3"></rect>';
+        out += '<text class="node-txt" x="' + x + '" y="' + (y + 4.5) + '" text-anchor="middle">' + esc(n.pred) + '</text></g>';
+      } else if (n.int) {
+        out += '<g><circle class="node-t" cx="' + x + '" cy="' + y + '" r="20" stroke-width="1.5"></circle>';
+        out += '<text class="node-txt" x="' + x + '" y="' + (y + 5) + '" text-anchor="middle" font-weight="500">' + esc(n.op) + '</text>';
+        out += '<text class="node-int" x="' + (x + 26) + '" y="' + (y + 4) + '">' + esc(n.int) + '</text></g>';
+      } else {
+        out += '<g><circle class="node-b" cx="' + x + '" cy="' + y + '" r="20" stroke-width="1.5"></circle>';
+        out += '<text class="node-txt" x="' + x + '" y="' + (y + 5) + '" text-anchor="middle">' + esc(n.op) + '</text></g>';
+      }
+    });
+    out += '</svg>';
+    graph.innerHTML = '<div class="glab">syntax graph · edges run operand → operator</div>' + out;
+  }
+
+  function renderReading(f) {
+    var dl = f.defs.map(function (d) { return '<dt>' + esc(d[0]) + '</dt><dd>' + esc(d[1]) + '</dd>'; }).join("");
+    reading.innerHTML = '<div class="f">φ = ' + esc(f.full) + '</div><div class="en">' + esc(f.en) + '</div><div class="src">' + esc(f.src) + '</div><dl>' + dl + '</dl>';
+  }
+
+  function select(i) {
+    Array.prototype.forEach.call(tabs.children, function (t, j) {
+      t.setAttribute("aria-selected", i === j ? "true" : "false");
+      t.tabIndex = i === j ? 0 : -1;
+    });
+    renderGraph(FORMULAS[i]);
+    renderReading(FORMULAS[i]);
+  }
+
+  FORMULAS.forEach(function (f, i) {
+    var b = document.createElement("button");
+    b.className = "tab"; b.type = "button"; b.role = "tab"; b.id = "ftab-" + i;
+    b.setAttribute("role", "tab");
+    b.textContent = f.short;
+    b.addEventListener("click", function () { select(i); });
+    b.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        var n = (i + (e.key === "ArrowRight" ? 1 : FORMULAS.length - 1)) % FORMULAS.length;
+        select(n); tabs.children[n].focus(); e.preventDefault();
+      }
+    });
+    tabs.appendChild(b);
+  });
+  select(0);
+
+  /* ---------- Results facets ---------- */
+  var METHODS = ["Base", "STL-SFT", "Smooth ρ (1×)", "Smooth ρ (2×)", "Logic-VLA"];
+  var SPLITS = [
+    { name: "Seen", n: "60 entries · 600 rollouts", sat: [41.3, 61.7, 76.2, 78.8, 82.0], task: [90.5, 87.2, 68.5, 45.0, 89.0] },
+    { name: "Unseen parameter", n: "99 entries · 990 rollouts", sat: [50.0, 59.5, 71.1, 72.1, 74.8], task: [93.9, 91.2, 75.9, 47.4, 92.2] },
+    { name: "Unseen structure", n: "56 entries · 560 rollouts", sat: [56.8, 64.5, 77.5, 81.8, 82.0], task: [89.3, 85.2, 68.6, 42.0, 87.5] }
+  ];
+  var facets = document.getElementById("facets");
+  var tip = document.getElementById("tip");
+
+  SPLITS.forEach(function (sp) {
+    var W = 320, labW = 92, padR = 34, top = 8, rowH = 30, barH = 9, gap = 2;
+    var plotW = W - labW - padR;
+    var H = top + METHODS.length * rowH + 22;
+    var sx = function (v) { return labW + v / 100 * plotW; };
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(sp.name) + ' split: STL satisfaction and task success per method">';
+    [0, 25, 50, 75, 100].forEach(function (g) {
+      s += '<line class="gridl" x1="' + sx(g) + '" x2="' + sx(g) + '" y1="' + top + '" y2="' + (top + METHODS.length * rowH) + '"></line>';
+      s += '<text class="ax" x="' + sx(g) + '" y="' + (H - 6) + '" text-anchor="middle">' + g + '</text>';
+    });
+    s += '<line class="base" x1="' + sx(0) + '" x2="' + sx(0) + '" y1="' + top + '" y2="' + (top + METHODS.length * rowH) + '"></line>';
+    METHODS.forEach(function (m, i) {
+      var y = top + i * rowH, hl = (i === 4 || i === 0);
+      s += '<text class="rowlab' + (i === 4 ? " hl" : "") + '" x="' + (labW - 8) + '" y="' + (y + rowH / 2 + 4) + '" text-anchor="end">' + esc(m) + '</text>';
+      var y1 = y + rowH / 2 - barH - gap / 2, y2 = y + rowH / 2 + gap / 2;
+      s += '<rect class="bar-s" x="' + sx(0) + '" y="' + y1 + '" width="' + (sx(sp.sat[i]) - sx(0)) + '" height="' + barH + '" rx="0"></rect>';
+      s += '<rect class="bar-t" x="' + sx(0) + '" y="' + y2 + '" width="' + (sx(sp.task[i]) - sx(0)) + '" height="' + barH + '" rx="0"></rect>';
+      if (hl) {
+        s += '<text class="val" x="' + (sx(sp.sat[i]) + 4) + '" y="' + (y1 + barH - 1) + '">' + sp.sat[i].toFixed(1) + '</text>';
+        s += '<text class="val" x="' + (sx(sp.task[i]) + 4) + '" y="' + (y2 + barH - 1) + '">' + sp.task[i].toFixed(1) + '</text>';
+      }
+      s += '<rect class="hit" x="' + labW + '" y="' + y + '" width="' + plotW + '" height="' + rowH + '" data-m="' + esc(m) + '" data-s="' + sp.sat[i] + '" data-t="' + sp.task[i] + '"></rect>';
+    });
+    s += '</svg>';
+    var div = document.createElement("div");
+    div.className = "facet";
+    div.innerHTML = '<h3>' + esc(sp.name) + '</h3><div class="n">' + esc(sp.n) + '</div>' + s;
+    facets.appendChild(div);
+  });
+
+  facets.addEventListener("mousemove", function (e) {
+    var t = e.target;
+    if (t.classList && t.classList.contains("hit")) {
+      tip.textContent = t.getAttribute("data-m") + " · STL " + t.getAttribute("data-s") + "% · task " + t.getAttribute("data-t") + "%";
+      tip.style.left = e.clientX + "px"; tip.style.top = e.clientY + "px";
+      tip.classList.add("on");
+    } else { tip.classList.remove("on"); }
+  });
+  facets.addEventListener("mouseleave", function () { tip.classList.remove("on"); });
+
+  /* ---------- Robot trials ---------- */
+  var TRIALS = [
+    ["F[3s,17s](at table right) ∧ F[10s,36s](at box right)", 15],
+    ["F[3s,17s](at table right) ∧ F[10s,36s](at box left)", 15],
+    ["F[3s,17s](at table left) ∧ F[10s,36s](at box right)", 15],
+    ["F[3s,17s](at table left) ∧ F[10s,36s](at box left)", 15],
+    ["F[0s,22s](at cabinets)", 14],
+    ["F[3s,17s](at table left)", 15],
+    ["F[3s,17s](at table right)", 15],
+    ["F[10s,36s](at box left)", 15],
+    ["F[10s,36s](at box right)", 15],
+    ["F[3s,17s](at table left) ∧ F[0s,22s](at cabinets)", 13],
+    ["F[10s,22s](at box right) ∧ F[0s,22s](at cabinets)", 14]
+  ];
+  var ol = document.getElementById("trials");
+  TRIALS.forEach(function (t, i) {
+    var cells = "";
+    for (var k = 0; k < 15; k++) cells += '<i class="' + (k < t[1] ? "" : "x") + '"></i>';
+    var li = document.createElement("li");
+    li.className = "trial";
+    li.innerHTML = '<span class="id">' + (i + 1) + '</span><span class="stl">' + esc(t[0]) + '</span><span class="r"><span class="cells" aria-hidden="true">' + cells + '</span><span class="cnt">' + t[1] + '/15</span></span>';
+    ol.appendChild(li);
+  });
+})();
+</script>
+</body>
+</html>
