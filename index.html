@@ -139,7 +139,12 @@
   .hero h1 { font-size: clamp(48px, 8vw, 96px); font-weight: 500; letter-spacing: -0.02em; line-height: 0.98; }
   .hero h1 .hy { color: var(--sat); }
   .hero .sub { font-family: var(--serif); font-size: clamp(20px, 2.4vw, 28px); font-weight: 400; font-style: italic; color: var(--ink-2); max-width: 30ch; line-height: 1.3; text-wrap: balance; }
-  .authors { font-size: 14px; color: var(--muted); }
+  .author-list { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 22px; font-size: 16px; color: var(--ink); max-width: 60ch; }
+  .author-list a { text-decoration: none; border-bottom: 1px solid var(--rule-strong); }
+  .author-list a:hover { border-bottom-color: var(--sat); color: var(--sat-ink); }
+  .author-list sup { color: var(--muted); font-size: 0.7em; margin-left: 2px; }
+  .affil { margin-top: 10px; font-size: 13.5px; color: var(--muted); max-width: 60ch; }
+  .affil sup { font-size: 0.75em; margin-right: 2px; }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .btn {
     display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
@@ -345,8 +350,17 @@
         <p class="eyebrow"><span>Requirement-aware post-training</span><span class="dot">●</span><span>Signal Temporal Logic</span></p>
         <h1 style="margin-top:18px">Logic<span class="hy">-</span>VLA</h1>
         <p class="sub" style="margin-top:14px">A temporal logic conditioned vision-language-action model.</p>
+        <p class="author-list" aria-label="Authors">
+          <span><a href="https://scholar.google.com/citations?user=2RCZsUkAAAAJ&amp;hl=en" target="_blank" rel="noopener">Celina Shiyu Wang</a><sup>1</sup></span>
+          <span><a href="https://zhaoy37.github.io/" target="_blank" rel="noopener">Yiqi Zhao</a><sup>1,†</sup></span>
+          <span><a href="https://junjieye.com/" target="_blank" rel="noopener">Junjie Ye</a><sup>1</sup></span>
+          <span><a href="https://yuewang.xyz/" target="_blank" rel="noopener">Yue Wang</a><sup>1</sup></span>
+          <span><a href="https://viterbi.usc.edu/directory/faculty/Deshmukh/Jyotirmoy" target="_blank" rel="noopener">Jyotirmoy V. Deshmukh</a><sup>1,†</sup></span>
+        </p>
+        <p class="affil"><sup>1</sup>Thomas Lord Department of Computer Science, University of Southern California &nbsp;·&nbsp; <sup>†</sup>Equal advising</p>
         <div class="actions" style="margin-top:22px">
-          <a class="btn primary" href="assets/logic-vla-paper.pdf">Paper <span class="k">PDF</span></a>
+          <a class="btn primary" href="https://arxiv.org/abs/2608.20556" target="_blank" rel="noopener">Paper <span class="k">arXiv</span></a>
+          <a class="btn" href="assets/logic-vla-paper.pdf">PDF</a>
           <a class="btn" href="#video">Video <span class="k">3:00</span></a>
           <a class="btn" href="#" aria-disabled="true">Code <span class="k">soon</span></a>
         </div>
@@ -586,9 +600,11 @@
       <div class="rail"><span class="num">§ 6</span><span>Citation</span></div>
       <div class="body">
         <h2>Cite</h2>
-<pre class="bib">@article{logicvla2026,
-  title  = {Logic-VLA: A Temporal Logic Conditioned Vision-Language-Action Model},
-  year   = {2026}
+<pre class="bib">@article{wang2026logicvla,
+  title   = {Logic-VLA: A Temporal Logic Conditioned Vision-Language-Action Model},
+  author  = {Wang, Celina Shiyu and Zhao, Yiqi and Ye, Junjie and Wang, Yue and Deshmukh, Jyotirmoy V.},
+  journal = {arXiv preprint arXiv:2608.20556},
+  year    = {2026}
 }</pre>
         <footer>
           <span>Logic-VLA · Built on π<sub>0.5</sub> and TeLoGraF · Evaluated in NVIDIA Isaac Sim 5.1</span>
