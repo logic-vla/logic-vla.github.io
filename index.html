@@ -187,6 +187,10 @@
   .fig { background: var(--paper); padding: 20px 20px 18px; display: grid; gap: 6px; align-content: start; }
   .fig .v { font-family: var(--serif); font-size: clamp(30px, 3.4vw, 44px); line-height: 1; color: var(--ink); letter-spacing: -0.01em; }
   .fig .v.sat { color: var(--sat-ink); }
+  .fig .vs { display: grid; gap: 6px; }
+  .fig .vs .row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; }
+  .fig .vs .v { font-size: clamp(22px, 2.3vw, 30px); }
+  .fig .vs .l { font-size: 14px; color: var(--ink-2); }
   .fig .u { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
   .fig .d { font-size: 14px; color: var(--ink-2); line-height: 1.45; }
   @media (max-width: 720px) { .figures { grid-template-columns: 1fr; } }
@@ -402,13 +406,17 @@
         <div class="figures wide">
           <div class="fig">
             <span class="u">STL satisfaction vs. STL-blind base</span>
-            <span class="v sat tnum">+24.8 to +40.7 pp</span>
-            <span class="d">Across seen formulas, unseen parameters, and unseen formula structures in simulation.</span>
+            <span class="vs">
+              <span class="row"><span class="v sat tnum">+40.7 pp</span><span class="l">seen formulas</span></span>
+              <span class="row"><span class="v sat tnum">+24.8 pp</span><span class="l">unseen parameters</span></span>
+              <span class="row"><span class="v sat tnum">+25.2 pp</span><span class="l">unseen structures</span></span>
+            </span>
+            <span class="d">Percentage-point gain on each simulation split.</span>
           </div>
           <div class="fig">
             <span class="u">Cost to the language task</span>
             <span class="v tnum">≤ 1.8 pp</span>
-            <span class="d">Largest drop in natural-language task success in any split. Direct robustness maximization loses up to 48 pp.</span>
+            <span class="d">Largest drop in natural-language task success in any split. Direct robust semantics maximization loses up to 48 pp.</span>
           </div>
           <div class="fig">
             <span class="u">Physical robot</span>
@@ -468,7 +476,7 @@
               <h3>Give the encoder semantics before it meets the policy</h3>
               <p>For trajectory–formula pairs <span class="math">(p<sup>(i)</sup>, φ<sup>(j)</sup>)</span>, a monitor computes the true robust semantics. The graph encoder and an auxiliary trajectory encoder are trained to predict it. The trajectory encoder is then discarded. Only the symbolic requirement is encoded; the scene is grounded through the cameras, so the logic representation is independent of any particular environment.</p>
               <div class="eq math">L<sub>pre</sub> = 𝔼 [ H<sub>δ</sub>( r̂<sup>(i,j)</sup> − tanh( ρ<sup>(i,j)</sup> / c ) ) ]
-                <span class="why">Huber loss on the normalized robustness. This one choice lifts seen-formula satisfaction from 46.7% to 61.7% under otherwise identical supervised fine-tuning.</span></div>
+                <span class="why">Huber loss on the normalized robust semantics. This one choice lifts seen-formula satisfaction from 46.7% to 61.7% under otherwise identical supervised fine-tuning.</span></div>
             </div>
           </li>
           <li class="step">
@@ -533,7 +541,7 @@
             </tbody>
           </table>
         </div>
-        <p class="tnote"><b>Table I.</b> ρ min is the worst robustness over all rollouts in the split; Logic-VLA has the least severe worst case in every split. Unseen parameter covers all 87 training structures with held-out predicate and time parameters. Unseen structure covers 3 templates held out from both post-training and encoder pre-training.</p>
+        <p class="tnote"><b>Table I.</b> ρ min is the worst robust semantics value over all rollouts in the split; Logic-VLA has the least severe worst case in every split. Unseen parameter covers all 87 training structures with held-out predicate and time parameters. Unseen structure covers 3 templates held out from both post-training and encoder pre-training.</p>
 
         <div class="abl">
           <div class="tablewrap">
